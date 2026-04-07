@@ -5,7 +5,7 @@ import numpy as np
 
 DEV_MODE = os.environ.get("DEV_MODE", "0") == "1"
 DEVICE = "default" if DEV_MODE else "plughw:3,0"
-THRESHOLD = 0.7
+THRESHOLD = 0.9
 
 print(f"[BOOT] Starting assistant (DEV_MODE={DEV_MODE}, DEVICE={DEVICE})", flush=True)
 
