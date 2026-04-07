@@ -33,23 +33,55 @@ def play_beep():
     print(f"[BEEP] Exit code: {result.returncode}, stderr: {result.stderr.decode()}", flush=True)
 
 
-def record_speech(duration=5):
-    print(f"[RECORD] Recording {duration}s...", flush=True)
+def record_speech(max_duration=10, silence_threshold=500, silence_duration=1.5):
+    """Record speech with silence detection to stop early."""
+    print("[RECORD] Recording (will stop on silence)...", flush=True)
+
+    # Start recording process
     if DEV_MODE:
-        subprocess.run(
-            ["rec", "-r", "16000", "-c", "1", "-b", "16", "/tmp/speech.wav", "trim", "0", str(duration)],
-            capture_output=True,
-        )
+        cmd = ["rec", "-r", "16000", "-c", "1", "-b", "16", "-t", "raw", "-"]
     else:
-        subprocess.run(
-            [
-                "arecord", "-D", DEVICE, "-f", "S16_LE",
-                "-r", "16000", "-c", "1", "-d", str(duration),
-                "/tmp/speech.wav",
-            ],
-            capture_output=True,
-        )
-    print("[RECORD] Done", flush=True)
+        cmd = ["arecord", "-D", DEVICE, "-f", "S16_LE", "-r", "16000", "-c", "1", "-t", "raw"]
+
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+
+    # Read audio in chunks and detect silence
+    chunk_size = 1600  # 0.1 seconds at 16kHz
+    chunks = []
+    silent_chunks = 0
+    silence_chunks_needed = int(silence_duration / 0.1)
+    max_chunks = max_duration * 10
+
+    try:
+        for i in range(max_chunks):
+            data = proc.stdout.read(chunk_size * 2)  # 2 bytes per sample
+            if not data:
+                break
+
+            chunks.append(data)
+
+            # Check if this chunk is silent
+            audio = np.frombuffer(data, dtype=np.int16)
+            if np.abs(audio).mean() < silence_threshold:
+                silent_chunks += 1
+                if silent_chunks >= silence_chunks_needed and i > 10:  # At least 1s of audio
+                    print(f"[RECORD] Silence detected after {i * 0.1:.1f}s", flush=True)
+                    break
+            else:
+                silent_chunks = 0
+    finally:
+        proc.terminate()
+        proc.wait()
+
+    # Save to file
+    audio_data = b''.join(chunks)
+    subprocess.run(
+        ["sox", "-r", "16000", "-e", "signed", "-b", "16", "-c", "1", "-t", "raw", "-", "/tmp/speech.wav"],
+        input=audio_data,
+        capture_output=True
+    )
+
+    print(f"[RECORD] Done ({len(chunks) * 0.1:.1f}s recorded)", flush=True)
     return "/tmp/speech.wav"
 
 
@@ -57,7 +89,7 @@ def transcribe(path):
     print("[TRANSCRIBE] Sending to Groq...", flush=True)
     with open(path, "rb") as f:
         result = groq_client.audio.transcriptions.create(
-            model="whisper-large-v3", file=f
+            model="distil-whisper-large-v3-en", file=f
         )
     print(f"[TRANSCRIBE] Result: {result.text}", flush=True)
     return result.text
@@ -66,7 +98,7 @@ def transcribe(path):
 def ask_claude(text):
     print("[CLAUDE] Asking Claude...", flush=True)
     response = claude_client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model="claude-haiku-4-5-20251001",
         max_tokens=300,
         system="You are a helpful voice assistant. Keep responses short and conversational — 1-2 sentences max.",
         messages=[{"role": "user", "content": text}],
