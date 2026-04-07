@@ -1,17 +1,24 @@
 import os
 import subprocess
 import numpy as np
-from openwakeword.model import Model
-from groq import Groq
-from anthropic import Anthropic
+from dotenv import load_dotenv
 
-wake_model = Model()
-groq_client = Groq()
-claude_client = Anthropic()
+# Load environment variables from .env file
+load_dotenv()
 
 DEV_MODE = os.environ.get("DEV_MODE", "0") == "1"
 DEVICE = "default" if DEV_MODE else "plughw:3,0"
 THRESHOLD = 0.7
+
+if not DEV_MODE:
+    from openwakeword.model import Model
+    wake_model = Model()
+
+from groq import Groq
+from anthropic import Anthropic
+
+groq_client = Groq()
+claude_client = Anthropic()
 
 
 def play_beep():
@@ -61,38 +68,50 @@ def ask_claude(text):
 def speak(text):
     if DEV_MODE:
         proc = subprocess.Popen(
-            f'echo "{text}" | piper --model piper-models/en_US-lessac-medium.onnx --output_raw | play -r 22050 -e signed -b 16 -c 1 -t raw -',
+            f'echo "{text}" | piper --model models/en_US-lessac-medium.onnx --output_raw | play -r 22050 -e signed -b 16 -c 1 -t raw -',
             shell=True,
         )
     else:
         proc = subprocess.Popen(
-            f'echo "{text}" | piper --model ~/piper-models/en_US-lessac-medium.onnx --output_raw | aplay -D {DEVICE} -f S16_LE -r 22050',
+            f'echo "{text}" | piper --model ~/models/en_US-lessac-medium.onnx --output_raw | aplay -D {DEVICE} -f S16_LE -r 22050',
             shell=True,
         )
     proc.wait()
 
 
 def listen_wake_word():
-    if DEV_MODE:
-        proc = subprocess.Popen(
-            ["rec", "-r", "16000", "-c", "1", "-b", "16", "-t", "raw", "-"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-        )
-    else:
-        proc = subprocess.Popen(
-            [
-                "arecord", "-D", DEVICE, "-f", "S16_LE",
-                "-r", "16000", "-c", "1", "-t", "raw",
-            ],
-            stdout=subprocess.PIPE,
-        )
+    proc = subprocess.Popen(
+        [
+            "arecord", "-D", DEVICE, "-f", "S16_LE",
+            "-r", "16000", "-c", "1", "-t", "raw",
+        ],
+        stdout=subprocess.PIPE,
+    )
     return proc
 
 
-def main():
-    mode = "DEV" if DEV_MODE else "PROD"
-    print(f"Assistant ready! [{mode}] Say 'Hey Jarvis' to start.")
+def handle_interaction():
+    play_beep()
+    path = record_speech()
+    text = transcribe(path)
+    print(f"You: {text}")
+    reply = ask_claude(text)
+    print(f"Assistant: {reply}")
+    speak(reply)
+
+
+def run_dev():
+    print("Assistant ready! [DEV] Press Enter to speak, Ctrl+C to quit.")
+    try:
+        while True:
+            input("Press Enter to speak...")
+            handle_interaction()
+    except KeyboardInterrupt:
+        print("\nStopped.")
+
+
+def run_prod():
+    print("Assistant ready! [PROD] Say 'Hey Jarvis' to start.")
 
     proc = listen_wake_word()
 
@@ -108,18 +127,19 @@ def main():
                     proc.terminate()
                     proc.wait()
                     print("Wake word detected!")
-                    play_beep()
-                    path = record_speech()
-                    text = transcribe(path)
-                    print(f"You: {text}")
-                    reply = ask_claude(text)
-                    print(f"Assistant: {reply}")
-                    speak(reply)
+                    handle_interaction()
                     proc = listen_wake_word()
                     break
     except KeyboardInterrupt:
         proc.terminate()
         print("\nStopped.")
+
+
+def main():
+    if DEV_MODE:
+        run_dev()
+    else:
+        run_prod()
 
 
 if __name__ == "__main__":

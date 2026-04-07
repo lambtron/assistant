@@ -14,8 +14,8 @@ deploy:
 setup-mac:
 	brew install sox
 	pip3 install -r requirements.txt
-	mkdir -p piper-models
-	cd piper-models && \
+	mkdir -p models
+	cd models && \
 		[ -f en_US-lessac-medium.onnx ] || wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx && \
 		[ -f en_US-lessac-medium.onnx.json ] || wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json
 	sox -n beep.wav synth 0.3 sine 800 vol 0.5

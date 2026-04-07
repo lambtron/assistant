@@ -9,8 +9,8 @@ echo "Installing Python dependencies..."
 pip install -r requirements.txt --break-system-packages
 
 echo "Downloading Piper voice model..."
-mkdir -p ~/piper-models
-cd ~/piper-models
+mkdir -p ~/models
+cd ~/models
 if [ ! -f en_US-lessac-medium.onnx ]; then
     wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx
     wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json

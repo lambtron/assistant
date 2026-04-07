@@ -104,8 +104,8 @@ pip install openwakeword groq anthropic numpy piper-tts --break-system-packages
 ### 5. Download the Piper Voice Model
 
 ```bash
-mkdir -p ~/piper-models
-cd ~/piper-models
+mkdir -p ~/models
+cd ~/models
 wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx
 wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json
 ```
