@@ -9,8 +9,8 @@ echo "Installing Python dependencies..."
 pip install -r requirements.txt --break-system-packages
 
 echo "Downloading Piper voice model..."
-mkdir -p ~/models
-cd ~/models
+mkdir -p ~/assistant/models
+cd ~/assistant/models
 if [ ! -f en_US-lessac-medium.onnx ]; then
     wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx
     wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json
@@ -24,4 +24,5 @@ sudo cp ~/assistant/scripts/assistant.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable assistant
 
-echo "Setup complete! Set your env vars in /etc/systemd/system/assistant.service, then run: sudo systemctl start assistant"
+sudo systemctl start assistant
+echo "Setup complete! Assistant is running."

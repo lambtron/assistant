@@ -1,29 +1,28 @@
-# Assistant
+# Voice Assistant
 
-A voice-activated desk assistant powered by Claude, running on a Raspberry Pi.
-Say "Hey Jarvis" and ask anything — it listens, thinks, and speaks back.
+A voice-activated desk assistant powered by Claude, running on a Raspberry Pi. Say "Hey Jarvis" and ask anything — it listens, thinks, and speaks back.
 
 **Wake word** → **Listen** → **Transcribe** → **Think** → **Speak**
 
 ## Stack
 
-| Layer         | Technology             | Runs on    |
-| ------------- | ---------------------- | ---------- |
-| Wake word     | OpenWakeWord           | Local (Pi) |
-| Transcription | Groq Whisper API       | Cloud      |
-| Intelligence  | Claude API (Anthropic) | Cloud      |
-| TTS           | Piper                  | Local (Pi) |
+| Layer | Technology | Runs on |
+|-------|-----------|---------|
+| Wake word | OpenWakeWord | Local (Pi) |
+| Transcription | Groq Whisper API | Cloud |
+| Intelligence | Claude API (Anthropic) | Cloud |
+| TTS | Piper | Local (Pi) |
 
 ## Hardware
 
-| Item                                | Notes                                        | Cost |
-| ----------------------------------- | -------------------------------------------- | ---- |
-| Raspberry Pi 4 Model B (2GB+ RAM)   | Any Pi 4 works; 2GB is sufficient            | ~$35 |
-| ReSpeaker XVF3800 with Case         | USB-C mic array with built-in speaker output | ~$50 |
-| Mono Enclosed Speaker 4R 5W (Seeed) | Connects to ReSpeaker's 3.5mm jack           | ~$6  |
-| USB-C to USB-A cable                | **Must be a data cable**, not power-only     | —    |
-| microSD card (16GB+)                | For Raspberry Pi OS                          | —    |
-| USB-C power supply for Pi           | 5V 3A recommended                            | —    |
+| Item | Notes | Cost |
+|------|-------|------|
+| Raspberry Pi 4 Model B (2GB+ RAM) | Any Pi 4 works; 2GB is sufficient | ~$35 |
+| ReSpeaker XVF3800 with Case | USB-C mic array with built-in speaker output | ~$50 |
+| Mono Enclosed Speaker 4R 5W (Seeed) | Connects to ReSpeaker's 3.5mm jack | ~$6 |
+| USB-C to USB-A cable | **Must be a data cable**, not power-only | — |
+| microSD card (16GB+) | For Raspberry Pi OS | — |
+| USB-C power supply for Pi | 5V 3A recommended | — |
 
 ## API Keys
 
@@ -36,8 +35,7 @@ You'll need free accounts and API keys from:
 
 ### 1. Flash the Pi
 
-1. Download [Raspberry Pi Imager](https://www.raspberrypi.com/software/) on your
-   computer
+1. Download [Raspberry Pi Imager](https://www.raspberrypi.com/software/) on your computer
 2. Insert the microSD card into your computer
 3. Open the Imager and select:
    - **Device**: Raspberry Pi 4
@@ -46,8 +44,7 @@ You'll need free accounts and API keys from:
 4. Click the **settings/gear icon** before writing and configure:
    - **Hostname**: `raspberrypi`
    - **Username and password**: Choose something memorable
-   - **Wi-Fi**: Enter your home network SSID and password (use 2.4GHz if your
-     router has separate bands)
+   - **Wi-Fi**: Enter your home network SSID and password (use 2.4GHz if your router has separate bands)
    - **SSH**: Enable with password authentication
 5. Flash the card
 
@@ -68,17 +65,16 @@ You'll need free accounts and API keys from:
 
 ### 3. Connect the Hardware
 
-1. Plug the ReSpeaker XVF3800 into the Pi via USB-C to USB-A cable — use a
-   **blue USB 3.0 port**
+1. Plug the ReSpeaker XVF3800 into the Pi via USB-C to USB-A cable — use a **blue USB 3.0 port**
 2. Plug the mono speaker into the ReSpeaker's 3.5mm audio jack
 3. Verify the ReSpeaker is detected:
    ```bash
    lsusb
    # Should show: Seeed Technology Co., Ltd. reSpeaker XVF3800 4-Mic Array
-
+   
    arecord -l
    # Should list the ReSpeaker as a capture device
-
+   
    aplay -l
    # Should list the ReSpeaker as a playback device
    ```
@@ -90,8 +86,7 @@ You'll need free accounts and API keys from:
    aplay -D plughw:3,0 test.wav
    ```
 
-> **Note**: If the ReSpeaker doesn't show up in `lsusb`, try a different USB
-> cable. Some USB-C cables are power-only and don't carry data.
+> **Note**: If the ReSpeaker doesn't show up in `lsusb`, try a different USB cable. Some USB-C cables are power-only and don't carry data.
 
 ### 4. Install Dependencies
 
@@ -117,7 +112,6 @@ sox -n ~/beep.wav synth 0.3 sine 800 vol 0.5
 ```
 
 Test it:
-
 ```bash
 aplay -D plughw:3,0 ~/beep.wav
 ```
@@ -139,7 +133,6 @@ git clone https://github.com/YOUR_USERNAME/assistant.git
 ```
 
 Create your environment file:
-
 ```bash
 cat << EOF > ~/.assistant.env
 GROQ_API_KEY=your_groq_key_here
@@ -156,8 +149,7 @@ export GROQ_API_KEY ANTHROPIC_API_KEY
 python3 assistant.py
 ```
 
-Say "Hey Jarvis", wait for the beep, then ask a question. You should hear Claude
-respond through the speaker.
+Say "Hey Jarvis", wait for the beep, then ask a question. You should hear Claude respond through the speaker.
 
 ### 10. Run on Boot
 
@@ -171,7 +163,6 @@ sudo systemctl start assistant
 ```
 
 Now the assistant starts whenever the Pi is powered on. Check status with:
-
 ```bash
 sudo systemctl status assistant
 journalctl -u assistant -f   # live logs
@@ -182,16 +173,13 @@ journalctl -u assistant -f   # live logs
 You can run the assistant locally on your Mac for faster iteration.
 
 ### One-time setup:
-
 ```bash
 make setup-mac
 ```
 
-This installs sox, Python dependencies, downloads the Piper voice model, and
-generates the beep sound.
+This installs sox, Python dependencies, downloads the Piper voice model, and generates the beep sound.
 
 ### Run locally:
-
 ```bash
 make dev
 ```
@@ -199,41 +187,29 @@ make dev
 This uses your Mac's built-in mic and speaker instead of the ReSpeaker.
 
 ### Deploy to Pi:
-
 ```bash
 make deploy
 ```
 
-This pushes to GitHub and SSHs into the Pi to pull the latest code and restart
-the service.
+This pushes to GitHub and SSHs into the Pi to pull the latest code and restart the service.
 
 ## Troubleshooting
 
-**ReSpeaker not detected**: Try a different USB-C to USB-A cable. Many cables
-are power-only. The ReSpeaker LED will light up even with a power-only cable, so
-don't rely on that.
+**ReSpeaker not detected**: Try a different USB-C to USB-A cable. Many cables are power-only. The ReSpeaker LED will light up even with a power-only cable, so don't rely on that.
 
-**Can't SSH into Pi**: Make sure your computer and Pi are on the same Wi-Fi
-network. Try `arp -a` to find the Pi's IP address. If it doesn't appear,
-re-flash the SD card and double-check the Wi-Fi credentials.
+**Can't SSH into Pi**: Make sure your computer and Pi are on the same Wi-Fi network. Try `arp -a` to find the Pi's IP address. If it doesn't appear, re-flash the SD card and double-check the Wi-Fi credentials.
 
-**Audio too quiet**: Run `alsamixer`, select the ReSpeaker (F6), and raise the
-volume. Save with `sudo alsactl store`.
+**Audio too quiet**: Run `alsamixer`, select the ReSpeaker (F6), and raise the volume. Save with `sudo alsactl store`.
 
-**Wake word too sensitive**: Adjust the `THRESHOLD` value in `assistant.py` —
-raise it toward `0.8` or `0.9` to reduce false triggers.
+**Wake word too sensitive**: Adjust the `THRESHOLD` value in `assistant.py` — raise it toward `0.8` or `0.9` to reduce false triggers.
 
-**GPU warnings in console**: Ignore any `onnxruntime` GPU/CUDA warnings — the Pi
-has no GPU, so it falls back to CPU automatically.
+**GPU warnings in console**: Ignore any `onnxruntime` GPU/CUDA warnings — the Pi has no GPU, so it falls back to CPU automatically.
 
-**SD card shows wrong size**: If your microSD shows a tiny size (e.g. 42MB) on
-your computer, it likely has a leftover Linux partition. Use Disk Utility (Mac)
-or Raspberry Pi Imager's Erase option to reformat it.
+**SD card shows wrong size**: If your microSD shows a tiny size (e.g. 42MB) on your computer, it likely has a leftover Linux partition. Use Disk Utility (Mac) or Raspberry Pi Imager's Erase option to reformat it.
 
 ## Shutting Down
 
 Always shut down the Pi cleanly to avoid SD card corruption:
-
 ```bash
 sudo shutdown now
 ```

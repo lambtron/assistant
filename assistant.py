@@ -1,10 +1,6 @@
 import os
 import subprocess
 import numpy as np
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
 
 DEV_MODE = os.environ.get("DEV_MODE", "0") == "1"
 DEVICE = "default" if DEV_MODE else "plughw:3,0"
@@ -73,7 +69,7 @@ def speak(text):
         )
     else:
         proc = subprocess.Popen(
-            f'echo "{text}" | piper --model ~/models/en_US-lessac-medium.onnx --output_raw | aplay -D {DEVICE} -f S16_LE -r 22050',
+            f'echo "{text}" | piper --model ~/assistant/models/en_US-lessac-medium.onnx --output_raw | aplay -D {DEVICE} -f S16_LE -r 22050',
             shell=True,
         )
     proc.wait()

@@ -3,5 +3,3 @@ groq
 anthropic
 numpy
 piper-tts
-tensorflow
-python-dotenv
