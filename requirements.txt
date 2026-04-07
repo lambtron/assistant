@@ -1,0 +1,5 @@
+openwakeword
+groq
+anthropic
+numpy
+piper-tts
